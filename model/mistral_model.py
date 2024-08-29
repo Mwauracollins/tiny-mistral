@@ -249,34 +249,27 @@ optim = torch.optim.AdamW(model.parameters(), lr=5e-5)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, T_max=50)
 
 def generate_text(model, input_text, stoi, itos, max_length=100):
-    # Ensure model is in evaluation mode
     model.eval()
     
     # Encode input text to tokens
     input_ids = torch.tensor([stoi[c] for c in input_text], dtype=torch.long).unsqueeze(0)  # Add batch dimension
 
-    # Prepare past key values to speed up generation
     past_key_values = None
 
     generated_text = input_text
 
-    with torch.no_grad():  # No need to compute gradients for generation
+    with torch.no_grad():  
         for _ in range(max_length):
-            # Forward pass through the model
             logits, past_key_values = model(input_ids, past_key_values=past_key_values)
             
-            # Take the last token's logits and compute the next token
             next_token_logits = logits[0, -1, :]
             next_token_id = torch.argmax(next_token_logits, dim=-1).item()
 
-            # Append next token to input_ids for the next step
             input_ids = torch.cat([input_ids, torch.tensor([[next_token_id]])], dim=1)
 
-            # Convert token id back to character
             next_char = itos[next_token_id]
             generated_text += next_char
 
-            # Break if end of sequence token (if defined) is generated
             # if next_token_id == your_end_token_id:
             #     break
 
@@ -315,7 +308,6 @@ for epoch in range(2):
 
 
 
-# Example Usage
 input_text = "To be"
 generated_text = generate_text(model, input_text, stoi, itos)
 print("Generated Text: ", generated_text)
